@@ -7,8 +7,7 @@ use std::net::{TcpListener, TcpStream};
 use std::io::{Read, Write};
 use serde::{Deserialize, Serialize};
 
-// const DB_URL: &str = env!("DATABASE_URL");
-const DB_URL: &str = "DATABASE_URL";
+const DB_URL: &str = env!("DATABASE_URL");
 
 const HTTP_OK: &str = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n";
 const HTTP_NOT_FOUND: &str = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
@@ -74,6 +73,7 @@ fn handle_request(mut stream: TcpStream) {
             };
 
             let res = format!("{}{}", status_line, content);
+
             let res = res.as_bytes();
             stream.write_all(res).unwrap();
         }
@@ -81,8 +81,12 @@ fn handle_request(mut stream: TcpStream) {
     }
 }
 
-fn get_id(req: &str) -> &str {
-    req.split("/").nth(2).unwrap_or_default().split_whitespace().next().unwrap_or_default()
+fn get_id(req: &str) -> Option<i32> {
+    req.split('/').nth(2)?
+        .split_whitespace()
+        .next()?
+        .parse()
+        .ok()
 }
 
 fn parse_user_from_req(req: &str) -> Result<User, serde_json::Error> {

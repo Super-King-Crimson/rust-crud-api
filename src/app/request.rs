@@ -15,8 +15,8 @@ pub fn handle_post_request(req: &str) -> (String, String) {
 }
 
 pub fn handle_get_request(req: &str) -> (String, String) {
-    match (get_id(req).parse::<u32>(), Client::connect(DB_URL, NoTls)) {
-        (Ok(id), Ok(mut client)) => {
+    match (get_id(req), Client::connect(DB_URL, NoTls)) {
+        (Some(id), Ok(mut client)) => {
             match client.query_one("SELECT * FROM users WHERE id = $1", &[&id]) {
                 Ok(row) => {
                     let user = User::new(row.get(0), row.get(1), row.get(2));
@@ -48,12 +48,12 @@ pub fn handle_get_all_request(_req: &str) -> (String, String) {
 
 pub fn handle_put_request(req: &str) -> (String, String) {
     match (
-        get_id(req).parse::<i32>(),
+        get_id(req),
         parse_user_from_req(req),
         Client::connect(DB_URL, NoTls)
     ) 
     {
-        (Ok(id), Ok(user), Ok(mut client)) => {
+        (Some(id), Ok(user), Ok(mut client)) => {
             client.execute(
                 "UPDATE users SET name = $1, email = $2 WHERE id = $3", 
                 &[&user.name, &user.email, &id]
@@ -67,10 +67,10 @@ pub fn handle_put_request(req: &str) -> (String, String) {
 
 pub fn handle_delete_request(req: &str) -> (String, String) {
     match (
-        get_id(req).parse::<u32>(),
+        get_id(req),
         Client::connect(DB_URL, NoTls)
     ) {
-        (Ok(id), Ok(mut client)) => {
+        (Some(id), Ok(mut client)) => {
             let rows_affected = client.execute(
                 "DELETE FROM users WHERE id = $1", 
                 &[&id],
